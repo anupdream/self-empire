@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self Empire — Anup's Accountability Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --black: #080808;
+  --dark: #111111;
+  --card: #161616;
+  --border: #2a2a2a;
+  --red: #e63946;
+  --red-dim: #7c1c22;
+  --gold: #f4a628;
+  --green: #2ecc71;
+  --muted: #555;
+  --text: #e8e8e8;
+  --text-dim: #888;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* PIN GATE */
+#pin-gate {
+  position: fixed; inset: 0;
+  background: var(--black);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  gap: 24px;
+}
+#pin-gate h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 10vw, 96px);
+  color: var(--red);
+  letter-spacing: 8px;
+  line-height: 1;
+}
+#pin-gate p { color: var(--text-dim); font-size: 11px; letter-spacing: 2px; }
+#pin-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--red);
+  color: var(--text);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  letter-spacing: 20px;
+  text-align: center;
+  width: 200px;
+  outline: none;
+  padding: 8px 0;
+}
+#pin-error { color: var(--red); font-size: 11px; letter-spacing: 2px; min-height: 20px; }
+#pin-btn {
+  background: var(--red);
+  border: none;
+  color: white;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 4px;
+  padding: 12px 48px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#pin-btn:hover { background: #c1121f; }
+
+/* MAIN APP */
+#app { display: none; }
+
+/* HEADER */
+header {
+  background: var(--dark);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--red);
+  letter-spacing: 4px;
+}
+.header-stats {
+  display: flex; gap: 20px; align-items: center;
+}
+.hstat { text-align: center; }
+.hstat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  line-height: 1;
+}
+.hstat-val.up { color: var(--green); }
+.hstat-val.down { color: var(--red); }
+.hstat-val.gold { color: var(--gold); }
+.hstat-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+
+/* NAV */
+nav {
+  background: var(--dark);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  background: none; border: none;
+  color: var(--text-dim);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  padding: 12px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.nav-btn.active { color: var(--red); border-bottom-color: var(--red); }
+.nav-btn:hover { color: var(--text); }
+
+/* SECTIONS */
+.section { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+.section.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--red);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title span { font-size: 12px; color: var(--text-dim); font-family: 'Space Mono', monospace; letter-spacing: 1px; }
+
+/* QUOTE BOX */
+.quote-box {
+  border-left: 3px solid var(--red);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: #0f0f0f;
+}
+.quote-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+.quote-attr { font-size: 10px; color: var(--text-dim); margin-top: 4px; letter-spacing: 1px; }
+
+/* DAILY MISSION */
+.mission-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.mission-item:last-child { border-bottom: none; }
+.mission-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--red);
+  min-width: 28px;
+  line-height: 1;
+  margin-top: 2px;
+}
+.mission-text { font-size: 13px; color: var(--text); flex: 1; }
+.mission-weight {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* LOG AREA */
+textarea {
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  padding: 12px;
+  resize: vertical;
+  min-height: 140px;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.8;
+}
+textarea:focus { border-color: var(--red); }
+textarea::placeholder { color: var(--muted); }
+
+.btn {
+  background: var(--red);
+  border: none;
+  color: white;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 3px;
+  padding: 12px 32px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 2px;
+}
+.btn:hover { background: #c1121f; }
+.btn-sec {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 2px;
+}
+.btn-sec:hover { border-color: var(--red); color: var(--red); }
+
+/* GRADE DISPLAY */
+.grade-display {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.grade-badge {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px;
+  line-height: 1;
+  min-width: 80px;
+  text-align: center;
+}
+.grade-A { color: var(--green); }
+.grade-B { color: #27ae60; }
+.grade-C { color: var(--gold); }
+.grade-D { color: #e67e22; }
+.grade-F { color: var(--red); }
+.grade-details { flex: 1; min-width: 200px; }
+.grade-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  color: var(--text);
+}
+.grade-feedback {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  line-height: 1.6;
+}
+.grade-lines { margin-top: 12px; }
+.grade-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 11px;
+}
+.grade-line-text { color: var(--text-dim); flex: 1; }
+.grade-line-score { 
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  min-width: 50px;
+  text-align: right;
+}
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+
+/* GAP METER */
+.gap-meter { margin: 12px 0; }
+.gap-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.gap-bar {
+  height: 8px;
+  background: #1a1a1a;
+  border-radius: 1px;
+  overflow: hidden;
+}
+.gap-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  transition: width 0.8s ease;
+  border-radius: 1px;
+}
+
+/* STREAK */
+.streak-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.streak-dot {
+  width: 18px; height: 18px;
+  border-radius: 2px;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.streak-dot.hit { background: var(--green); }
+.streak-dot.miss { background: var(--red-dim); }
+.streak-dot.empty { background: #1a1a1a; }
+
+/* CHART */
+.chart-container { position: relative; height: 220px; margin: 12px 0; }
+
+/* CHAT */
+.chat-messages {
+  height: 280px;
+  overflow-y: auto;
+  padding: 12px;
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.msg {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 2px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.msg.user {
+  align-self: flex-end;
+  background: var(--red-dim);
+  color: var(--text);
+  border-left: 2px solid var(--red);
+}
+.msg.mentor {
+  align-self: flex-start;
+  background: #1a1a1a;
+  color: var(--text);
+  border-left: 2px solid var(--gold);
+}
+.msg-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  font-family: 'Bebas Neue', sans-serif;
+}
+.msg.user .msg-label { color: var(--red); }
+.msg.mentor .msg-label { color: var(--gold); }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input {
+  flex: 1;
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  padding: 10px 12px;
+  outline: none;
+  border-radius: 2px;
+  transition: border-color 0.2s;
+}
+.chat-input:focus { border-color: var(--gold); }
+
+/* WEEKLY RECKONING */
+.reckoning-q {
+  margin-bottom: 16px;
+}
+.reckoning-q label {
+  display: block;
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+}
+.reckoning-q textarea { min-height: 70px; }
+
+/* HISTORY TABLE */
+.hist-table { width: 100%; border-collapse: collapse; }
+.hist-table th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  padding: 8px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+}
+.hist-table td {
+  padding: 8px 8px;
+  border-bottom: 1px solid #1a1a1a;
+  font-size: 12px;
+  vertical-align: top;
+}
+.hist-table tr:hover td { background: #121212; }
+
+/* COMMITMENT */
+.commitment-item {
+  padding: 10px;
+  background: #0f0f0f;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.commitment-item.overdue { border-left: 3px solid var(--red); }
+.commitment-item.pending { border-left: 3px solid var(--gold); }
+.commitment-item.done { border-left: 3px solid var(--green); opacity: 0.5; }
+.comm-text { flex: 1; font-size: 12px; }
+.comm-age { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+.comm-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.cbtn {
+  padding: 4px 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.cbtn.yes { background: var(--green); color: #000; }
+.cbtn.no { background: var(--red); color: white; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  padding: 14px 20px;
+  font-size: 12px;
+  max-width: 320px;
+  z-index: 9000;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* SETTINGS */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.setting-label { font-size: 12px; color: var(--text); }
+.setting-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.setting-input {
+  background: #0d0d0d;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  padding: 6px 10px;
+  width: 140px;
+  outline: none;
+  border-radius: 2px;
+}
+
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+.big-number {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px;
+  line-height: 1;
+  color: var(--red);
+}
+.big-label { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-top: 4px; }
+
+.tag {
+  display: inline-block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  margin: 2px;
+}
+.tag-red { background: var(--red-dim); color: var(--red); }
+.tag-gold { background: #3a2800; color: var(--gold); }
+.tag-green { background: #0a2e1a; color: var(--green); }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  margin: 8px 0;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  background: var(--red);
+  border-radius: 50%;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- PIN GATE -->
+<div id="pin-gate">
+  <h1>SELF EMPIRE</h1>
+  <p>ENTER ACCESS CODE</p>
+  <input type="password" id="pin-input" maxlength="6" placeholder="····" autocomplete="off">
+  <p id="pin-error"></p>
+  <button class="btn" id="pin-btn" onclick="checkPin()">ENTER</button>
+  <p style="font-size:10px;color:var(--muted);margin-top:8px;">Default: 3241</p>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div class="logo">SELF EMPIRE</div>
+    <div class="header-stats">
+      <div class="hstat">
+        <div class="hstat-val gold" id="hdr-price">$10.00</div>
+        <div class="hstat-label">VALUE</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val" id="hdr-change">+0.0%</div>
+        <div class="hstat-label">7D CHANGE</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val up" id="hdr-streak">0</div>
+        <div class="hstat-label">STREAK</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val" id="hdr-grade">—</div>
+        <div class="hstat-label">TODAY</div>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="showSection('dashboard')">DASHBOARD</button>
+    <button class="nav-btn" onclick="showSection('log')">DAILY LOG</button>
+    <button class="nav-btn" onclick="showSection('mentor')">MENTOR CHAT</button>
+    <button class="nav-btn" onclick="showSection('chart')">CHART</button>
+    <button class="nav-btn" onclick="showSection('commitments')">COMMITMENTS</button>
+    <button class="nav-btn" onclick="showSection('reckoning')">RECKONING</button>
+    <button class="nav-btn" onclick="showSection('history')">HISTORY</button>
+    <button class="nav-btn" onclick="showSection('settings')">SETTINGS</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="section active">
+    <div id="daily-quote" class="quote-box">
+      <div class="quote-text" id="quote-text">Loading...</div>
+      <div class="quote-attr" id="quote-attr"></div>
+    </div>
+
+    <!-- GAP METER -->
+    <div class="card">
+      <div class="card-title">GAP METER <span>CURRENT PACE VS 2-YEAR TARGET</span></div>
+      <div class="gap-meter">
+        <div class="gap-label"><span>YOUR PACE</span><span id="gap-pct">0%</span></div>
+        <div class="gap-bar"><div class="gap-fill" id="gap-fill" style="width:0%"></div></div>
+      </div>
+      <div id="gap-verdict" style="font-size:11px;color:var(--red);margin-top:8px;letter-spacing:1px;"></div>
+    </div>
+
+    <!-- TODAY'S MISSIONS -->
+    <div class="card">
+      <div class="card-title">TODAY'S NON-NEGOTIABLES</div>
+      <div id="missions-list"></div>
+    </div>
+
+    <!-- STATS GRID -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">EMPIRE VALUE</div>
+        <div class="big-number" id="dash-price">$10.00</div>
+        <div class="big-label">CURRENT VALUATION</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--text-dim);">
+          2-year target: <span style="color:var(--gold);font-family:'Bebas Neue'" id="target-val">$2,000.00</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">STREAK STATUS</div>
+        <div class="big-number" id="dash-streak">0</div>
+        <div class="big-label">CONSECUTIVE DAYS</div>
+        <div class="streak-row" id="streak-dots"></div>
+      </div>
+    </div>
+
+    <!-- OVERDUE COMMITMENTS ALERT -->
+    <div id="overdue-alert" style="display:none;" class="card" style="border-color:var(--red)">
+      <div class="card-title" style="color:var(--red);">⚠ COMMITMENTS OVERDUE</div>
+      <div id="overdue-list"></div>
+    </div>
+
+    <!-- PATTERN ALERT -->
+    <div id="pattern-alert" style="display:none;" class="card">
+      <div class="card-title" style="color:var(--red);">PATTERN DETECTED</div>
+      <div id="pattern-text" style="font-size:12px;color:var(--text-dim);"></div>
+    </div>
+  </div>
+
+  <!-- DAILY LOG -->
+  <div id="section-log" class="section">
+    <div class="card">
+      <div class="card-title">DAILY LOG <span>BE BRUTALLY HONEST</span></div>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">Type everything you did today. Numbered list works best. The engine reads each line and grades you.</p>
+      <textarea id="log-input" placeholder="1. Went to gym — 45 min chest day&#10;2. Skipped audition prep (felt lazy)&#10;3. Published 2 articles on aiinformation.in&#10;4. Ate junk food — biryani + chips&#10;5. Cold emailed 3 casting directors&#10;6. Scrolled Instagram 2 hours avoiding work&#10;7. Filmed self-tape for Sony audition"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button class="btn" onclick="submitLog()">SUBMIT & GRADE</button>
+        <button class="btn-sec" onclick="clearLog()">CLEAR</button>
+      </div>
+    </div>
+
+    <div id="grade-result" style="display:none;" class="card">
+      <div class="card-title">TODAY'S VERDICT</div>
+      <div class="grade-display">
+        <div class="grade-badge" id="result-grade">—</div>
+        <div class="grade-details">
+          <div class="grade-score">Score: <span id="result-score">0</span>/100</div>
+          <div class="grade-feedback" id="result-feedback"></div>
+        </div>
+      </div>
+      <div class="grade-lines" id="result-lines"></div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px;">PRICE MOVEMENT</div>
+        <div style="font-family:'Bebas Neue';font-size:28px;" id="result-price-change"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENTOR CHAT -->
+  <div id="section-mentor" class="section">
+    <div class="card">
+      <div class="card-title">MENTOR <span>ASK ANYTHING — NO FILTER</span></div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="msg mentor">
+          <div class="msg-label">MENTOR</div>
+          You've got a dream — Bollywood, OTT, your own media empire. Good. Now what are you actually doing about it today? I don't do motivation. I do strategy and accountability. Ask me anything — about acting, procrastination, your content site, cold outreach, social anxiety — or tell me what you did today and I'll tell you exactly what I think. No sugarcoating.
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" class="chat-input" id="chat-input" placeholder="Ask your mentor anything..." onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn" style="padding:10px 20px;font-size:14px;" onclick="sendChat()">SEND</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div id="section-chart" class="section">
+    <div class="card">
+      <div class="card-title">EMPIRE VALUE CHART</div>
+      <div class="chart-container">
+        <canvas id="price-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">GRADE HISTORY</div>
+      <div class="chart-container" style="height:160px;">
+        <canvas id="grade-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMMITMENTS -->
+  <div id="section-commitments" class="section">
+    <div class="card">
+      <div class="card-title">LOG A COMMITMENT</div>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:10px;">When you say you'll do something, log it here. The system will chase you in 24–48 hours.</p>
+      <input type="text" class="chat-input" id="comm-input" placeholder="I will contact 3 casting directors by tomorrow..." style="width:100%;margin-bottom:10px;">
+      <button class="btn" onclick="addCommitment()">LOG COMMITMENT</button>
+    </div>
+    <div class="card">
+      <div class="card-title">OPEN COMMITMENTS</div>
+      <div id="commitments-list"></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY RECKONING -->
+  <div id="section-reckoning" class="section">
+    <div class="card">
+      <div class="card-title">WEEKLY RECKONING <span>SUNDAY PROTOCOL</span></div>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:16px;">5 questions. Brutal honesty required. This feeds next week's scoring weights.</p>
+      <div class="reckoning-q">
+        <label>01 — WHAT WAS YOUR BIGGEST AVOIDANCE THIS WEEK?</label>
+        <textarea id="r1" placeholder="Be specific. Not 'procrastination' — what exactly did you avoid and why?"></textarea>
+      </div>
+      <div class="reckoning-q">
+        <label>02 — WHAT MOVED YOUR CAREER FORWARD THIS WEEK?</label>
+        <textarea id="r2" placeholder="Acting, content, fitness, networking — what actually progressed?"></textarea>
+      </div>
+      <div class="reckoning-q">
+        <label>03 — WHAT ARE YOU SCARED TO DO NEXT WEEK?</label>
+        <textarea id="r3" placeholder="The thing you've been delaying. Name it exactly."></textarea>
+      </div>
+      <div class="reckoning-q">
+        <label>04 — YOUR SINGLE NON-NEGOTIABLE FOR MONDAY?</label>
+        <textarea id="r4" placeholder="One action. Specific. Not 'work harder' — an actual task with a deadline."></textarea>
+      </div>
+      <div class="reckoning-q">
+        <label>05 — RATE YOUR DISCIPLINE THIS WEEK (1–10) AND WHY?</label>
+        <textarea id="r5" placeholder="Honest number. Justify it with evidence."></textarea>
+      </div>
+      <button class="btn" onclick="submitReckoning()">SUBMIT RECKONING</button>
+    </div>
+    <div id="past-reckonings" class="card" style="display:none;">
+      <div class="card-title">PAST RECKONINGS</div>
+      <div id="past-reck-list"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="section-history" class="section">
+    <div class="card">
+      <div class="card-title">LOG HISTORY</div>
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>GRADE</th>
+            <th>SCORE</th>
+            <th>PRICE</th>
+            <th>CHANGE</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody"></tbody>
+      </table>
+      <div id="no-history" style="text-align:center;color:var(--text-dim);padding:24px;font-size:12px;">No logs yet. Start your first daily log.</div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="section-settings" class="section">
+    <div class="card">
+      <div class="card-title">PROFILE</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Your Name</div></div>
+        <input type="text" class="setting-input" id="set-name" value="Anup">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">PIN Code</div></div>
+        <input type="text" class="setting-input" id="set-pin" value="3241" maxlength="6">
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">2-Year Target ($)</div><div class="setting-sub">Empire value goal in 2 years</div></div>
+        <input type="number" class="setting-input" id="set-target" value="2000">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">SCORING WEIGHTS <span>ADJUST TO YOUR GOALS</span></div>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:12px;">These control how much each action moves your price. Higher = more impact.</p>
+      <div id="weights-editor"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">DATA</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="exportData()">BACKUP DATA</button>
+        <button class="btn-sec" onclick="document.getElementById('import-file').click()">RESTORE BACKUP</button>
+        <button class="btn-sec" style="border-color:var(--red);color:var(--red);" onclick="resetData()">RESET ALL</button>
+      </div>
+      <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+    </div>
+
+    <div class="card">
+      <div class="card-title">SAVE SETTINGS</div>
+      <button class="btn" onclick="saveSettings()">SAVE ALL SETTINGS</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+const DB = {
+  get: (k, def) => { try { const v = localStorage.getItem('se_'+k); return v ? JSON.parse(v) : def; } catch { return def; } },
+  set: (k, v) => { try { localStorage.setItem('se_'+k, JSON.stringify(v)); } catch {} }
+};
+
+// ============================================================
+// CONFIG
+// ============================================================
+let CFG = DB.get('config', {
+  pin: '3241',
+  name: 'Anup',
+  target: 2000,
+  basePrice: 10,
+  weights: {
+    // ACTING
+    audition: 9, selftape: 8, castingcall: 8, actingclass: 7, monologue: 6, filmshoot: 10, shortfilm: 10, commercial: 9, portfolio: 5,
+    // FITNESS
+    gym: 7, workout: 7, run: 6, yoga: 5, meditation: 5,
+    // CONTENT
+    article: 7, publish: 8, aiinformation: 9, youtube: 8, reel: 7, instagram: 6, newsletter: 6, seo: 7,
+    // OUTREACH
+    coldemail: 8, coldcall: 9, network: 7, pitch: 8, freelance: 8,
+    // LEARNING
+    read: 5, course: 6, research: 5,
+    // BAD
+    junkfood: -5, skip: -6, procrastinat: -7, scrolled: -5, lazy: -6, avoided: -8, missed: -7, wasted: -6, sleep: -3,
+  }
+});
+
+// ============================================================
+// QUOTES — 100 brutal, real, no fluff
+// ============================================================
+const QUOTES = [
+  ["You don't rise to the level of your goals. You fall to the level of your systems.", "James Clear"],
+  ["Motivation is for amateurs. Professionals show up regardless.", "Unknown"],
+  ["Every day you don't act is a day you choose to stay exactly where you are.", "Unknown"],
+  ["Stop telling people your plans. Show them your results.", "Unknown"],
+  ["The cost of discipline is always less than the cost of regret.", "Unknown"],
+  ["You are not lazy. You are afraid. Figure out what.", "Unknown"],
+  ["Comfortable people don't change the world. Uncomfortable action does.", "Unknown"],
+  ["Your dream life is on the other side of your worst fears.", "Unknown"],
+  ["You'll never be ready. Ship anyway.", "Unknown"],
+  ["The graveyard is full of people who were going to start tomorrow.", "Unknown"],
+  ["Auditions you don't attend = roles you don't get. Simple math.", "Unknown"],
+  ["Nobody is coming to save you. That's the good news — you don't have to wait.", "Unknown"],
+  ["Social anxiety is not a life sentence. It's a comfort zone you chose.", "Unknown"],
+  ["The camera doesn't care about your anxiety. It cares about your truth.", "Unknown"],
+  ["One self-tape a day beats ten conversations about self-tapes.", "Unknown"],
+  ["Your content site is either growing or dying. There is no neutral.", "Unknown"],
+  ["Casting directors remember who shows up consistently. Be unforgettable.", "Unknown"],
+  ["Wealth is not made in the mind. It's made in the execution.", "Unknown"],
+  ["The most dangerous phrase: 'I'll start when I'm ready.'", "Unknown"],
+  ["You've been given a 24-hour day same as every successful person alive.", "Unknown"],
+  ["Junk food is a bribe you pay yourself to avoid doing the hard thing.", "Unknown"],
+  ["Your phone is not a reward. It's a tax on your future.", "Unknown"],
+  ["One article a day for a year = 365 ranking pages. Do the math.", "Unknown"],
+  ["Cold emails feel awkward for 3 seconds. Poverty feels awkward for life.", "Unknown"],
+  ["The actor who moves to Mumbai and does nothing is identical to the one who never moved.", "Unknown"],
+  ["You can't negotiate with compounding. It just works — or it works against you.", "Unknown"],
+  ["Every skipped gym session is a debt your future body pays.", "Unknown"],
+  ["Fear of rejection from a casting director costs you more than actual rejection.", "Unknown"],
+  ["Done is better than perfect. Perfect never shipped.", "Unknown"],
+  ["The version of you 2 years from now is built entirely from today's choices.", "Unknown"],
+  ["Hard work in private creates success in public.", "Unknown"],
+  ["You are not your potential. You are your actions.", "Unknown"],
+  ["Introversion is a superpower in a world that never shuts up — if you train it.", "Unknown"],
+  ["OTT doesn't want the loudest actor. It wants the most real one.", "Unknown"],
+  ["Every published article is a soldier working for you while you sleep.", "Unknown"],
+  ["The difference between amateur and professional is showing up when you don't want to.", "Unknown"],
+  ["Your competition is already at the audition. Where are you?", "Unknown"],
+  ["An hour of deep work beats eight hours of busy work every single time.", "Unknown"],
+  ["Stop optimizing your tools. Start using them.", "Unknown"],
+  ["Procrastination is the decision to be exactly where you are forever.", "Unknown"],
+  ["Volume beats talent at the start. Send the emails. Make the tapes. Publish the posts.", "Unknown"],
+  ["You don't need more information. You need more action.", "Unknown"],
+  ["Small consistent actions compound into results that look like overnight success.", "Unknown"],
+  ["The longer you wait, the harder it gets. Do it now.", "Unknown"],
+  ["Rockefeller didn't build an empire by waiting to feel motivated.", "Unknown"],
+  ["Your social anxiety is between you and your goals. Not your genes.", "Unknown"],
+  ["Write the article. Record the reel. Send the email. In that order. Every day.", "Unknown"],
+  ["Audiences connect with scars, not armour. Your introversion is a story.", "Unknown"],
+  ["₹1 crore is built from ₹1. Where is your ₹1 today?", "Unknown"],
+  ["Excuses are just detailed explanations of why you chose comfort over growth.", "Unknown"],
+];
+
+// ============================================================
+// MENTOR RESPONSES — 80+ specific to Anup's life
+// ============================================================
+const MENTOR_KB = [
+  { keys: ['procrastinat','lazy','delay','tomorrow','later'], responses: [
+    "Procrastination is a lie you tell yourself that today doesn't count. It counts double because compound interest works both ways. What specifically are you avoiding right now? Name it.",
+    "You've been planning this app longer than it would've taken to build it. Same with whatever you're procrastinating on right now. The antidote is not motivation — it's a 2-minute start. Begin. Right now.",
+    "Lazy is not your identity. Lazy is a symptom. The question is — what are you scared will happen if you actually try and it doesn't work?"
+  ]},
+  { keys: ['audition','casting','role','actor','acting'], responses: [
+    "Every audition you don't attend is a guaranteed rejection. At least showing up gives you a chance. The casting director cannot discover you if you're sitting at home.",
+    "OTT platforms are actively hunting for authentic, real faces right now. Your natural look and introversion are assets in 2026 — not obstacles. But you have to be in the room.",
+    "Self-tapes are the cheapest audition in history. A phone, decent light, and a wall. You have all three. What's stopping you from making one today?"
+  ]},
+  { keys: ['anxiety','scared','nervous','fear','shy','introvert'], responses: [
+    "Social anxiety is real. But it's also trainable. Every conversation you force yourself to have shrinks the anxiety slightly. Every conversation you avoid grows it. You're choosing which direction to train it every single day.",
+    "The realistic cinema era on OTT is literally made for people like you — quiet, authentic, natural. The overcaffeinated theatre-trained voice is out. Your vibe is in. Use it.",
+    "Fear of rejection is protecting you from the thing you actually want. That's not a character flaw — it's a very human trap. The exit is action, not analysis."
+  ]},
+  { keys: ['gym','fitness','workout','exercise','health'], responses: [
+    "Your body is your instrument as an actor. Every skipped gym session is a choice to be less physically present on screen. The camera sees everything.",
+    "Fitness is not about looks. It's about proving to yourself every morning that you can do hard things. That carries into auditions, into cold emails, into everything.",
+    "Miss gym once — fine. Miss it twice — pattern forming. Miss it three times — you're negotiating with the worst version of yourself. Don't negotiate."
+  ]},
+  { keys: ['article','content','aiinformation','publish','seo','blog','write'], responses: [
+    "Every article you publish is a permanent employee working 24/7 for free. Google doesn't care if you felt uninspired today. Publish anyway.",
+    "aiinformation.in is in its sandbox period. This is when the boring work separates those who make it from those who quit. 5 articles a day feels impossible until it's a habit.",
+    "Your writing voice — first person, opinionated, no jargon — is exactly what ranks in 2026. Keep writing. The traffic will come."
+  ]},
+  { keys: ['youtube','video','reel','instagram','social'], responses: [
+    "One reel from one article. That's the system. You built it. Are you actually executing it or just remembering that you planned it?",
+    "YouTube is a long game. The first 50 videos exist for nobody except your future audience who'll binge them when you blow up. Start building the archive.",
+    "Instagram for aiinformation.in is brand building. Post consistently or don't post — inconsistency is worse than silence."
+  ]},
+  { keys: ['money','income','revenue','rich','poor','broke','earn'], responses: [
+    "₹1 crore in 12 months from a new site is an aggressive target. Not impossible — but it requires the output of someone who wants it badly enough to publish 5 articles a day minimum.",
+    "The path from broke to rich is always the same: do high-value work, do it consistently, tell people about it. Which of the three are you currently failing at?",
+    "Money follows value. You're building two value machines — aiinformation.in and your acting career. Which one got more of your hours today?"
+  ]},
+  { keys: ['cold','email','outreach','agency','freelance','contact'], responses: [
+    "100 cold emails with zero replies means your targeting is wrong, not your writing. Are you emailing people who actually have a problem you can solve?",
+    "Cold email formula: one line of context, one specific problem you noticed, one concrete solution, one easy ask. Stop writing essays.",
+    "The best time to send that cold email was yesterday. Second best time is now. Stop editing it and hit send."
+  ]},
+  { keys: ['junk','food','eat','diet','unhealthy'], responses: [
+    "Junk food is a comfort response to stress or boredom. Which one was it today? Figure that out and you've found the real problem.",
+    "Your body performs at the level you fuel it. Actors under studio lights for 12-hour shoots need energy. Biryani and chips is not a performance diet.",
+    "One bad meal isn't the problem. The pattern behind it is."
+  ]},
+  { keys: ['skip','miss','avoid','didn\'t'], responses: [
+    "You avoided it. We both know it. The question is — will you avoid it again tomorrow? If yes, you need to understand why. If no, log it and move.",
+    "Missing one thing is fine. Missing the same thing repeatedly is a decision. Own it.",
+    "What would happen if you just did the thing you're avoiding for 10 minutes? Usually the anticipation is worse than the task."
+  ]},
+  { keys: ['help','what should','how do','advice','stuck'], responses: [
+    "Tell me exactly what you're stuck on — acting, content, outreach, or personal habits — and I'll give you a specific next action, not a pep talk.",
+    "I need specifics to help you. Vague problems get vague advice. What exactly is the obstacle?",
+    "What's the single most important thing you could do today that would move your life forward? Do that first. Everything else is secondary."
+  ]},
+  { keys: ['tired','burnout','exhausted','overwhelm'], responses: [
+    "Tired is real. But there's a difference between needing rest and avoiding discomfort. Which one is this? Be honest.",
+    "Working 10 hours a day solo is sustainable only if you protect your recovery. Strategic rest is not laziness — it's maintenance. What would one genuinely restorative hour look like today?",
+    "Burnout is what happens when you grind without direction. Make sure your hard work is pointed at the right targets."
+  ]},
+  { keys: ['how are you','hello','hi','hey','sup'], responses: [
+    "I'm not here for small talk. I'm here to make sure you don't waste the day. What did you do in the last 24 hours that actually moved you forward?",
+    "Here. What have you done today? Don't hold back — give me the full picture."
+  ]},
+  { keys: [], responses: [
+    "Be more specific. What exactly are you dealing with — acting, content, money, habits, or something else? I can only help if you give me the real problem.",
+    "That's a broad question. Narrow it down. What specific action are you avoiding or unsure about right now?",
+    "Tell me what happened today. What did you do, what did you skip, and what are you telling yourself about why you skipped it?"
+  ]}
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let STATE = DB.get('state', {
+  prices: [{date: new Date().toISOString(), price: 10}],
+  logs: [],
+  commitments: [],
+  reckonings: [],
+  streak: 0,
+  lastLogDate: null,
+  streakDates: [],
+  credits: 0,
+  totalDays: 0,
+});
+
+// ============================================================
+// PIN
+// ============================================================
+function checkPin() {
+  const v = document.getElementById('pin-input').value;
+  if (v === CFG.pin) {
+    document.getElementById('pin-gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('pin-error').textContent = 'WRONG CODE. TRY AGAIN.';
+    document.getElementById('pin-input').value = '';
+  }
+}
+document.getElementById('pin-input').addEventListener('keydown', e => { if(e.key==='Enter') checkPin(); });
+
+// ============================================================
+// INIT
+// ============================================================
+function initApp() {
+  loadQuote();
+  updateHeader();
+  renderMissions();
+  renderStreakDots();
+  renderCommitments();
+  checkOverdue();
+  checkPatterns();
+  renderWeightsEditor();
+  updateGapMeter();
+  showSection('dashboard');
+  checkReckoningDue();
+  loadPastReckonings();
+}
+
+// ============================================================
+// QUOTE
+// ============================================================
+function loadQuote() {
+  const idx = new Date().getDate() % QUOTES.length;
+  const q = QUOTES[idx];
+  document.getElementById('quote-text').textContent = '"' + q[0] + '"';
+  document.getElementById('quote-attr').textContent = '— ' + q[1];
+}
+
+// ============================================================
+// HEADER
+// ============================================================
+function updateHeader() {
+  const prices = STATE.prices;
+  const cur = prices[prices.length-1]?.price || CFG.basePrice;
+  const wk = prices.length >= 7 ? prices[prices.length-7].price : prices[0]?.price || cur;
+  const chg = ((cur - wk) / wk * 100).toFixed(1);
+  const chgEl = document.getElementById('hdr-change');
+  chgEl.textContent = (chg >= 0 ? '+' : '') + chg + '%';
+  chgEl.className = 'hstat-val ' + (chg >= 0 ? 'up' : 'down');
+  document.getElementById('hdr-price').textContent = '$' + cur.toFixed(2);
+  document.getElementById('dash-price').textContent = '$' + cur.toFixed(2);
+  document.getElementById('hdr-streak').textContent = STATE.streak;
+  document.getElementById('dash-streak').textContent = STATE.streak;
+  const last = STATE.logs[STATE.logs.length-1];
+  const gradeEl = document.getElementById('hdr-grade');
+  if (last && last.date === todayStr()) {
+    gradeEl.textContent = last.grade;
+    gradeEl.className = 'hstat-val grade-' + last.grade;
+  } else {
+    gradeEl.textContent = '—';
+    gradeEl.className = 'hstat-val';
+  }
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+// ============================================================
+// GAP METER
+// ============================================================
+function updateGapMeter() {
+  const cur = STATE.prices[STATE.prices.length-1]?.price || CFG.basePrice;
+  const target = CFG.target;
+  const pct = Math.min(100, Math.round((cur / target) * 100));
+  document.getElementById('gap-fill').style.width = pct + '%';
+  document.getElementById('gap-pct').textContent = pct + '%';
+  document.getElementById('target-val').textContent = '$' + target.toFixed(2);
+  const days = STATE.logs.length;
+  const needed = target;
+  let verdict = '';
+  if (days < 7) {
+    verdict = 'LOG MORE DAYS TO PROJECT YOUR TRAJECTORY.';
+  } else {
+    const avgDaily = (cur - CFG.basePrice) / Math.max(days, 1);
+    const daysLeft = avgDaily > 0 ? Math.round((needed - cur) / avgDaily) : 99999;
+    if (daysLeft > 730) verdict = `⚠ AT CURRENT PACE: ${daysLeft} DAYS TO TARGET. YOU NEED TO 3X YOUR OUTPUT.`;
+    else if (daysLeft > 365) verdict = `ON TRACK FOR 2-YEAR TARGET. ACCELERATE TO HIT 1-YEAR.`;
+    else verdict = `STRONG PACE. ${daysLeft} DAYS TO TARGET AT CURRENT RATE.`;
+  }
+  document.getElementById('gap-verdict').textContent = verdict;
+}
+
+// ============================================================
+// MISSIONS — generated daily based on score patterns
+// ============================================================
+const MISSIONS_POOL = [
+  {text: 'Record one self-tape and upload it today', weight: 'HIGH VALUE', cat: 'acting'},
+  {text: 'Email 3 casting directors or agencies with your portfolio', weight: 'HIGH VALUE', cat: 'acting'},
+  {text: 'Research and attend one open audition this week — book it now', weight: 'HIGH VALUE', cat: 'acting'},
+  {text: 'Publish 2 articles on aiinformation.in before midnight', weight: 'HIGH VALUE', cat: 'content'},
+  {text: 'Write and schedule 1 Instagram reel from your latest article', weight: 'MEDIUM', cat: 'content'},
+  {text: 'Do 45 minutes of gym or any physical training', weight: 'MEDIUM', cat: 'fitness'},
+  {text: 'Have one real conversation with a stranger today', weight: 'ANXIETY KILLER', cat: 'social'},
+  {text: 'Send 5 cold outreach messages for freelance writing work', weight: 'INCOME', cat: 'freelance'},
+  {text: 'Read 20 pages of any book on acting, business, or psychology', weight: 'LEARNING', cat: 'learn'},
+  {text: 'Work on one article targeting US/UK traffic for 2 hours', weight: 'HIGH VALUE', cat: 'content'},
+  {text: 'Record a voice practice session — 15 minutes of script reading', weight: 'MEDIUM', cat: 'acting'},
+  {text: 'No junk food today. Non-negotiable.', weight: 'BASELINE', cat: 'fitness'},
+  {text: 'Update your portfolio or showreel with latest work', weight: 'MEDIUM', cat: 'acting'},
+  {text: 'Check Google Search Console and fix one CTR underperformer', weight: 'HIGH VALUE', cat: 'content'},
+];
+function renderMissions() {
+  const seed = new Date().getDate() + new Date().getMonth();
+  const pick = [
+    MISSIONS_POOL[(seed) % MISSIONS_POOL.length],
+    MISSIONS_POOL[(seed + 4) % MISSIONS_POOL.length],
+    MISSIONS_POOL[(seed + 9) % MISSIONS_POOL.length],
+  ];
+  const el = document.getElementById('missions-list');
+  el.innerHTML = pick.map((m, i) => `
+    <div class="mission-item">
+      <div class="mission-num">${i+1}</div>
+      <div class="mission-text">${m.text}</div>
+      <div class="mission-weight">${m.weight}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// STREAK
+// ============================================================
+function renderStreakDots() {
+  const el = document.getElementById('streak-dots');
+  const dates = STATE.streakDates || [];
+  let html = '';
+  for(let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    const hit = dates.includes(ds);
+    html += `<div class="streak-dot ${hit ? 'hit' : (i === 0 ? 'empty' : 'miss')}" title="${ds}"></div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ============================================================
+// SCORING ENGINE
+// ============================================================
+function scoreLog(text) {
+  const lines = text.split('\n').filter(l => l.trim().length > 2);
+  const details = [];
+  let totalScore = 0;
+
+  lines.forEach(line => {
+    const lower = line.toLowerCase();
+    let lineScore = 0;
+    let matched = [];
+
+    Object.entries(CFG.weights).forEach(([kw, w]) => {
+      if(lower.includes(kw)) {
+        lineScore += w;
+        matched.push({kw, w});
+      }
+    });
+
+    // Length/specificity bonus
+    if(line.length > 60) lineScore += 2;
+    if(line.includes('hour') || line.includes('min')) lineScore += 1;
+
+    const clean = line.replace(/^\d+\.\s*/, '').substring(0, 55);
+    details.push({text: clean + (clean.length >= 55 ? '...' : ''), score: lineScore, isAvoid: lineScore < 0});
+    totalScore += lineScore;
+  });
+
+  // Normalize to 0-100
+  const raw = totalScore;
+  const capped = Math.max(0, Math.min(100, 50 + raw * 2));
+
+  // Streak multiplier
+  const streakMult = Math.min(1 + STATE.streak * 0.02, 1.3);
+  const final = Math.round(capped * streakMult);
+
+  let grade, feedback;
+  if(final >= 85) { grade = 'A'; feedback = 'Elite execution. This is the pace that builds empires. Don\'t slow down — compound this.'; }
+  else if(final >= 70) { grade = 'B'; feedback = 'Solid day. You moved forward. But review your avoidances — they\'re the gap between B and A.'; }
+  else if(final >= 55) { grade = 'C'; feedback = 'Mediocre. You did enough to say you did something, not enough to change anything. What was your excuse today?'; }
+  else if(final >= 40) { grade = 'D'; feedback = 'Weak. The uncomfortable truth: today you chose comfort over growth. Your price reflects it.'; }
+  else { grade = 'F'; feedback = 'Failure. Not as a person — as an executor. Something is fundamentally wrong. The avoidance pattern is winning. Face it now.'; }
+
+  return {score: final, grade, feedback, details, raw};
+}
+
+function submitLog() {
+  const text = document.getElementById('log-input').value.trim();
+  if(text.length < 10) { showToast('Write more. Be specific about what you actually did.'); return; }
+
+  const result = scoreLog(text);
+  const prices = STATE.prices;
+  const lastPrice = prices[prices.length-1]?.price || CFG.basePrice;
+
+  // Price calculation
+  const sentimentMap = {A:0.06, B:0.03, C:0, D:-0.03, F:-0.07};
+  const drift = sentimentMap[result.grade];
+  const noise = (Math.random() - 0.5) * 0.02;
+  const reversion = 0.02 * (CFG.basePrice - lastPrice) / Math.max(lastPrice, 1);
+  const newPrice = Math.max(0.5, lastPrice * Math.exp(drift + noise + reversion));
+
+  // Update streak
+  const td = todayStr();
+  if(STATE.lastLogDate !== td) {
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    const yd = yesterday.toISOString().split('T')[0];
+    STATE.streak = (STATE.lastLogDate === yd) ? STATE.streak + 1 : 1;
+    STATE.lastLogDate = td;
+    if(!STATE.streakDates) STATE.streakDates = [];
+    STATE.streakDates.push(td);
+    if(STATE.streakDates.length > 90) STATE.streakDates.shift();
+  }
+
+  // Save log
+  const logEntry = {
+    date: td,
+    text,
+    grade: result.grade,
+    score: result.score,
+    price: newPrice,
+    prevPrice: lastPrice,
+    feedback: result.feedback,
+  };
+  STATE.logs = STATE.logs.filter(l => l.date !== td);
+  STATE.logs.push(logEntry);
+
+  // Save price
+  STATE.prices.push({date: new Date().toISOString(), price: newPrice});
+  if(STATE.prices.length > 365) STATE.prices.shift();
+
+  STATE.totalDays = (STATE.totalDays || 0) + 1;
+  DB.set('state', STATE);
+
+  // Show result
+  const gradeBadge = document.getElementById('result-grade');
+  gradeBadge.textContent = result.grade;
+  gradeBadge.className = 'grade-badge grade-' + result.grade;
+  document.getElementById('result-score').textContent = result.score;
+  document.getElementById('result-feedback').textContent = result.feedback;
+
+  const priceDiff = newPrice - lastPrice;
+  const priceChgEl = document.getElementById('result-price-change');
+  priceChgEl.textContent = `$${lastPrice.toFixed(2)} → $${newPrice.toFixed(2)} (${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)})`;
+  priceChgEl.style.color = priceDiff >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Line details
+  const linesEl = document.getElementById('result-lines');
+  linesEl.innerHTML = result.details.map(d => `
+    <div class="grade-line">
+      <div class="grade-line-text">${d.text}</div>
+      <div class="grade-line-score ${d.score >= 0 ? 'pos' : 'neg'}">${d.score >= 0 ? '+' : ''}${d.score}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('grade-result').style.display = 'block';
+  updateHeader();
+  renderStreakDots();
+  updateGapMeter();
+  checkPatterns();
+  renderCharts();
+  showToast(`Grade ${result.grade} — $${newPrice.toFixed(2)}`);
+}
+
+function clearLog() { document.getElementById('log-input').value = ''; document.getElementById('grade-result').style.display='none'; }
+
+// ============================================================
+// PATTERN DETECTION
+// ============================================================
+function checkPatterns() {
+  const logs = STATE.logs.slice(-7);
+  if(logs.length < 3) return;
+  const keywords = ['skip','miss','avoid','procrastinat','lazy'];
+  const counts = {};
+  logs.forEach(log => {
+    keywords.forEach(kw => {
+      if(log.text && log.text.toLowerCase().includes(kw)) {
+        counts[kw] = (counts[kw] || 0) + 1;
+      }
+    });
+  });
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  if(top && top[1] >= 3) {
+    document.getElementById('pattern-alert').style.display = 'block';
+    document.getElementById('pattern-text').textContent =
+      `You've mentioned "${top[0]}" in ${top[1]} of your last ${logs.length} logs. This is a pattern, not a coincidence. What's the root cause?`;
+  }
+}
+
+// ============================================================
+// MENTOR CHAT
+// ============================================================
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML += `<div class="msg user"><div class="msg-label">YOU</div>${text}</div>`;
+
+  const lower = text.toLowerCase();
+  let response = '';
+  let matched = false;
+
+  for(const entry of MENTOR_KB) {
+    if(entry.keys.length === 0) continue;
+    if(entry.keys.some(k => lower.includes(k))) {
+      const r = entry.responses;
+      response = r[Math.floor(Math.random() * r.length)];
+      matched = true;
+      break;
+    }
+  }
+  if(!matched) {
+    const fallback = MENTOR_KB[MENTOR_KB.length-1].responses;
+    response = fallback[Math.floor(Math.random() * fallback.length)];
+  }
+
+  setTimeout(() => {
+    msgs.innerHTML += `<div class="msg mentor"><div class="msg-label">MENTOR</div>${response}</div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 400);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ============================================================
+// CHARTS
+// ============================================================
+let priceChartInst, gradeChartInst;
+function renderCharts() {
+  const prices = STATE.prices.slice(-60);
+  const labels = prices.map(p => new Date(p.date).toLocaleDateString('en-IN', {month:'short',day:'numeric'}));
+  const vals = prices.map(p => p.price);
+
+  const ctx1 = document.getElementById('price-chart').getContext('2d');
+  if(priceChartInst) priceChartInst.destroy();
+  priceChartInst = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Empire Value',
+        data: vals,
+        borderColor: '#e63946',
+        backgroundColor: 'rgba(230,57,70,0.08)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 2,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#1a1a1a' }, ticks: { color: '#555', font: { size: 10 } } },
+        y: { grid: { color: '#1a1a1a' }, ticks: { color: '#555', font: { size: 10 }, callback: v => '$'+v.toFixed(1) } }
+      }
+    }
+  });
+
+  const logs = STATE.logs.slice(-30);
+  const gmap = {A:5,B:4,C:3,D:2,F:1};
+  const ctx2 = document.getElementById('grade-chart').getContext('2d');
+  if(gradeChartInst) gradeChartInst.destroy();
+  gradeChartInst = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: logs.map(l => l.date.slice(5)),
+      datasets: [{
+        data: logs.map(l => gmap[l.grade] || 0),
+        backgroundColor: logs.map(l => ({A:'#2ecc71',B:'#27ae60',C:'#f4a628',D:'#e67e22',F:'#e63946'}[l.grade] || '#333')),
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#1a1a1a' }, ticks: { color: '#555', font: { size: 9 } } },
+        y: { grid: { color: '#1a1a1a' }, ticks: { color: '#555', font: { size: 9 }, callback: v => ['','F','D','C','B','A'][v] || '', stepSize: 1, min: 0, max: 5 } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// COMMITMENTS
+// ============================================================
+function addCommitment() {
+  const text = document.getElementById('comm-input').value.trim();
+  if(!text) return;
+  STATE.commitments.push({id: Date.now(), text, date: new Date().toISOString(), status: 'pending'});
+  DB.set('state', STATE);
+  document.getElementById('comm-input').value = '';
+  renderCommitments();
+  showToast('Commitment logged. The system will hold you to this.');
+}
+
+function resolveCommitment(id, done) {
+  const c = STATE.commitments.find(c => c.id === id);
+  if(!c) return;
+  c.status = done ? 'done' : 'failed';
+  if(!done) {
+    // Price penalty
+    const prices = STATE.prices;
+    const last = prices[prices.length-1]?.price || CFG.basePrice;
+    prices.push({date: new Date().toISOString(), price: Math.max(0.5, last * 0.95)});
+    showToast('Commitment failed. -5% price penalty applied.');
+  } else {
+    showToast('Commitment kept. Integrity builds empire.');
+  }
+  DB.set('state', STATE);
+  renderCommitments();
+  updateHeader();
+}
+
+function renderCommitments() {
+  const el = document.getElementById('commitments-list');
+  const active = STATE.commitments.filter(c => c.status === 'pending' || c.status === 'overdue');
+  if(!active.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:12px;padding:12px 0;">No open commitments. Log one above.</div>'; return; }
+
+  const now = Date.now();
+  el.innerHTML = active.map(c => {
+    const age = Math.round((now - new Date(c.date).getTime()) / 3600000);
+    const isOverdue = age >= 48;
+    const cls = isOverdue ? 'overdue' : 'pending';
+    const ageStr = age < 1 ? 'Just now' : age < 24 ? `${age}h ago` : `${Math.round(age/24)}d ago`;
+    return `<div class="commitment-item ${cls}">
+      <div style="flex:1;">
+        <div class="comm-text">${c.text}</div>
+        <div class="comm-age">${isOverdue ? '⚠ OVERDUE — ' : ''}${ageStr}</div>
+      </div>
+      <div class="comm-btns">
+        <button class="cbtn yes" onclick="resolveCommitment(${c.id}, true)">DONE</button>
+        <button class="cbtn no" onclick="resolveCommitment(${c.id}, false)">FAILED</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function checkOverdue() {
+  const overdue = STATE.commitments.filter(c => {
+    if(c.status !== 'pending') return false;
+    const age = (Date.now() - new Date(c.date).getTime()) / 3600000;
+    return age >= 24;
+  });
+  const alert = document.getElementById('overdue-alert');
+  if(overdue.length) {
+    alert.style.display = 'block';
+    document.getElementById('overdue-list').innerHTML = overdue.map(c =>
+      `<div style="font-size:12px;color:var(--text-dim);padding:4px 0;border-bottom:1px solid var(--border);">${c.text}</div>`
+    ).join('');
+  }
+}
+
+// ============================================================
+// WEEKLY RECKONING
+// ============================================================
+function checkReckoningDue() {
+  const day = new Date().getDay();
+  if(day === 0) {
+    const lastReck = STATE.reckonings[STATE.reckonings.length-1];
+    const lastReckWeek = lastReck ? new Date(lastReck.date).getDay() : -1;
+    if(!lastReck || new Date(lastReck.date).toISOString().split('T')[0] !== todayStr()) {
+      showToast('⚡ SUNDAY RECKONING DUE. Go to Reckoning tab.');
+    }
+  }
+}
+
+function submitReckoning() {
+  const answers = ['r1','r2','r3','r4','r5'].map(id => document.getElementById(id).value.trim());
+  if(answers.some(a => a.length < 5)) { showToast('Answer all 5 questions honestly.'); return; }
+  STATE.reckonings.push({date: new Date().toISOString(), answers});
+  DB.set('state', STATE);
+  ['r1','r2','r3','r4','r5'].forEach(id => document.getElementById(id).value = '');
+  showToast('Reckoning logged. This is how you build self-awareness.');
+  loadPastReckonings();
+}
+
+function loadPastReckonings() {
+  if(!STATE.reckonings.length) return;
+  const el = document.getElementById('past-reck-list');
+  const labels = ['Biggest avoidance','Moved forward','Scared of','Monday non-neg','Discipline rating'];
+  el.innerHTML = STATE.reckonings.slice(-3).reverse().map(r =>
+    `<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+      <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:8px;">${new Date(r.date).toLocaleDateString()}</div>
+      ${r.answers.map((a,i) => `<div style="margin-bottom:6px;"><div style="font-size:9px;color:var(--gold);letter-spacing:1px;">${labels[i]}</div><div style="font-size:12px;color:var(--text-dim);">${a}</div></div>`).join('')}
+    </div>`
+  ).join('');
+  document.getElementById('past-reckonings').style.display = 'block';
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function renderHistory() {
+  const tbody = document.getElementById('history-tbody');
+  const logs = STATE.logs.slice().reverse();
+  if(!logs.length) { document.getElementById('no-history').style.display='block'; tbody.innerHTML=''; return; }
+  document.getElementById('no-history').style.display='none';
+  tbody.innerHTML = logs.map(l => {
+    const chg = l.prevPrice ? ((l.price - l.prevPrice) / l.prevPrice * 100).toFixed(1) : '0.0';
+    return `<tr>
+      <td style="color:var(--text-dim)">${l.date}</td>
+      <td><span style="font-family:'Bebas Neue';font-size:18px;" class="grade-${l.grade}">${l.grade}</span></td>
+      <td>${l.score}</td>
+      <td>$${l.price?.toFixed(2) || '—'}</td>
+      <td style="color:${chg >= 0 ? 'var(--green)' : 'var(--red)'}">${chg >= 0 ? '+' : ''}${chg}%</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// WEIGHTS EDITOR
+// ============================================================
+function renderWeightsEditor() {
+  const el = document.getElementById('weights-editor');
+  const positive = Object.entries(CFG.weights).filter(([,v]) => v > 0);
+  const negative = Object.entries(CFG.weights).filter(([,v]) => v < 0);
+  el.innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;color:var(--green);letter-spacing:2px;margin-bottom:8px;">POSITIVE ACTIONS</div>
+      ${positive.map(([k,v]) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div style="font-size:11px;color:var(--text-dim);width:120px;">${k}</div>
+          <input type="range" min="1" max="15" value="${v}" oninput="CFG.weights['${k}']=parseInt(this.value);this.nextElementSibling.textContent=this.value" style="flex:1;">
+          <div style="font-size:11px;color:var(--green);min-width:24px;">${v}</div>
+        </div>`).join('')}
+    </div>
+    <div>
+      <div style="font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:8px;">NEGATIVE ACTIONS (PENALTIES)</div>
+      ${negative.map(([k,v]) => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <div style="font-size:11px;color:var(--text-dim);width:120px;">${k}</div>
+          <input type="range" min="-15" max="-1" value="${v}" oninput="CFG.weights['${k}']=parseInt(this.value);this.nextElementSibling.textContent=this.value" style="flex:1;">
+          <div style="font-size:11px;color:var(--red);min-width:24px;">${v}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function saveSettings() {
+  CFG.pin = document.getElementById('set-pin').value || '3241';
+  CFG.name = document.getElementById('set-name').value || 'Anup';
+  CFG.target = parseFloat(document.getElementById('set-target').value) || 2000;
+  DB.set('config', CFG);
+  updateGapMeter();
+  showToast('Settings saved.');
+}
+
+// ============================================================
+// BACKUP / RESTORE
+// ============================================================
+function exportData() {
+  const data = {state: STATE, config: CFG, exported: new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'self-empire-backup-' + todayStr() + '.json';
+  a.click();
+  showToast('Backup downloaded.');
+}
+function importData(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if(d.state) { STATE = d.state; DB.set('state', STATE); }
+      if(d.config) { CFG = d.config; DB.set('config', CFG); }
+      showToast('Backup restored.');
+      initApp();
+    } catch { showToast('Invalid backup file.'); }
+  };
+  reader.readAsText(file);
+}
+function resetData() {
+  if(confirm('RESET ALL DATA? This cannot be undone.')) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  event?.target?.classList.add('active');
+  if(id === 'chart') renderCharts();
+  if(id === 'history') renderHistory();
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.style.display='none', 3500);
+}
+</script>
+</body>
+</html>
